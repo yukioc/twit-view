@@ -1,0 +1,36 @@
+NAME
+
+  twit-view - simple twitter viewer
+
+SYNOPSYS
+
+  twit-view [<options>] <query>
+
+DESCRIPTION
+
+  The options are as follows:
+
+OPTIONS
+
+  <query>
+    get the twitter of the about the query.
+
+  -s <word>
+    word for the emphasis.
+
+  -S <word>
+    word for the emphasis.
+
+  -h -? --help
+    display command line help message.
+
+EXAMPLES
+
+  twit-view.pl -s japan -S like -S love '#prayforjapan -rt'
+
+HISTORY
+
+  v.0.1
+    * '-s,-S' emphasis
+    * added searching twitter about the query.
+
