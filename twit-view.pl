@@ -2,14 +2,17 @@
 
 use strict;
 use warnings;
-use Net::Twitter::Lite;
+use Encode qw/decode encode/;
+use URI::Escape qw/uri_escape/;
+use LWP::Simple qw/get/;
+use Term::ANSIColor qw/colored/;
+use JSON qw/decode_json/;
 use Data::Dumper;
-use Encode;
-use Term::ANSIColor;
 $Term::ANSIColor::AUTORESET=1;
+$|=1; # STDOUT auto flush
 
 sub usage{
-    my $s=<<"USAGE";
+    print <<"USAGE";
 Usage: $0 [-s word] query
 
 $0 is a simple twitter viewer.
@@ -20,14 +23,18 @@ Option:
  -h -? --help  this help
 
 USAGE
-print $s;
 exit;
 }
 
-my $inifile='twit-view.ini';
+sub version{
+  print "twit-view v.0.2\n";
+  exit;
+}
+
 my $q;
 my @sword1;
 my @sword2;
+my %query=(rpp=>"60", result_type=>"recent");
 
 #--- read arg and ini
 while(@ARGV){
@@ -38,43 +45,39 @@ while(@ARGV){
         push(@sword2,decode('utf8',shift));
     }elsif($argv=~/^(-h|-\?|--help)/){
         usage;
+    }elsif($argv eq '--version'){
+        version;
     }else{
         $q=$argv;
         last;
     }
 }
-my %ini;
-open my $fi,"<",$inifile or die "error:$!";
-while(<$fi>){
-  $ini{$1}=$2 if(/\s*(\w+)\s*=(\S+)/);
-}
-close $fi;
 
-#--- check param;
-my $consumer_key = $ini{consumer_key_secret} or die "error: not found consumer_key_secret";
-my $consumer_key_secret = $ini{consumer_key_secret} or die "error: not found consumer_key_secret";
-my $access_token = $ini{access_token} or die "error: not found access_token";
-my $access_token_secret = $ini{access_token_secret} or die "error: not found access_token_secret";
+#--- check param
 die "error: not found query\n" if(!$q);
 
-#--- main
-my $nt = Net::Twitter::Lite->new(
-  consumer_key    => $consumer_key,
-  consumer_secret => $consumer_key_secret,
-);
-$nt->access_token($access_token);
-$nt->access_token_secret($access_token_secret);
+#--- twitter
+sub get_twitter{
+    my $q=shift;
+    my %opt=%{$_[0]};
+    my ($k,$v);
+    my $url="http://search.twitter.com/search.json?q=".uri_escape($q);
+    $url.="&$k=$v" while(($k,$v)=each(%opt));
+    return decode_json(get($url));
+}
 
-$|=1; # STDOUT auto flush
+#--- main
 my $last_id='0';
+my $wait=0;
 while(1){
     my $r;
     my @tubuyaki;
     while(1){
-        $r=$nt->search({q=>$q,since_id=>"0"});
+        sleep($wait) if($wait>0);
+        $r=get_twitter($q,\%query);
+        $wait=30;
         last if($r->{results_per_page}>0 && $r->{max_id} ne $last_id);
         print ".";
-        sleep(10);
     }
     print "\r";
     for my $status (@{$r->{results}}){
@@ -93,6 +96,7 @@ while(1){
         $t=~ s/($_)/colored($1,'on_red')/egi foreach(@sword2);
         print "$u:".encode('utf8',"$t\n");
         sleep(1);
+        $wait-- if($wait>0);
     }
 }
 

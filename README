@@ -8,7 +8,14 @@ SYNOPSYS
 
 DESCRIPTION
 
+  twit-view is a simple twitter view via http://dev.twitter.com/doc/get/search.
+  This script do not need oAuth because using anonymous api.
+
   The options are as follows:
+
+REQUIREMENTS
+
+  Term::ANSIColor
 
 OPTIONS
 
@@ -29,6 +36,10 @@ EXAMPLES
   twit-view.pl -s japan -S like -S love '#prayforjapan -rt'
 
 HISTORY
+
+  v.0.2
+    * use anonymous api instead of the oAuth.
+    * fixed bug that hash-tag and user is not emphasis.
 
   v.0.1
     * '-s,-S' emphasis
