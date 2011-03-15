@@ -78,8 +78,7 @@ while(1){
     }
     print "\r";
     for my $status (@{$r->{results}}){
-        my $u=$status->{from_user};
-        my $s=$status->{text};
+        my ($u,$s)=($status->{from_user},$status->{text});
         last if($status->{id} eq $last_id);
         push(@tubuyaki,[$u,$s]);
     }
@@ -87,9 +86,9 @@ while(1){
     while($#tubuyaki>0){
         my ($u,$t)=@{shift(@tubuyaki)};
         $u=colored($u,'blue');
-        $t=~ s/(#[0-9A-Za-z-_]+)/colored(' '.$1,'green')/eg;
-        $t=~ s/(@[A-Za-z-_]+)/colored($1,'cyan')/eg;
-        $t=~ s/(http:[\x21-\x7e]+)/colored($1." ",'magenta')/eg;
+        $t=~ s/(^|[^\w\-]+)(#[\w\-]+)/$1.colored($2,'green')/eg;
+        $t=~ s/(@[\w\-]+)/colored($1,'cyan')/eg;
+        $t=~ s/(http:[\x21-\x7e]+)/colored($1.' ','magenta')/eg;
         $t=~ s/($_)/colored($1,'yellow')/egi foreach(@sword1);
         $t=~ s/($_)/colored($1,'on_red')/egi foreach(@sword2);
         print "$u:".encode('utf8',"$t\n");
